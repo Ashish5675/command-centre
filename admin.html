@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Geni-AI Command Centre</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070E1E;--card:#0E1B33;--card2:#132040;--cyan:#7CF2E8;--lime:#D6F26A;--muted:#7A8BB0}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Space Grotesk',sans-serif}
+body{background:var(--bg);color:#E6EEFF;display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--card);border-right:1px solid rgba(124,242,232,0.1);padding:20px}
+.sidebar h2{font-size:14px;letter-spacing:0.15em;color:var(--cyan);margin-bottom:20px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav div{padding:11px 14px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--muted);transition:0.2s}
+.nav div.active,.nav div:hover{background:rgba(124,242,232,0.12);color:#fff}
+.main{flex:1;padding:26px;overflow-y:auto}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--card2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px}
+.stat h4{font-size:11px;color:var(--muted);letter-spacing:0.1em}.stat h2{font-size:22px;margin-top:6px}
+.mono{font-family:'JetBrains Mono',monospace}
+.panel{background:var(--card);border:1px solid rgba(124,242,232,0.12);border-radius:16px;padding:20px;margin-top:16px}
+label{font-size:10px;color:var(--muted);letter-spacing:0.1em;display:block;margin-top:12px;margin-bottom:6px}
+input,textarea,select{width:100%;padding:11px;border-radius:10px;background:#0A1226;border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:13px}
+textarea{min-height:70px}
+.btn{margin-top:16px;padding:12px;border-radius:10px;background:var(--lime);color:#000;font-weight:700;border:none;cursor:pointer;width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.project-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-top:12px;font-size:12px}
+.project-card a{color:var(--cyan);word-break:break-all}
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions button{padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-size:11px}
+.edit{background:var(--cyan);color:#000}.del{background:rgba(255,80,80,0.15);color:#FF9A9A}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<h2 class="mono">GENI-AI ADMIN</h2>
+<div class="nav">
+<div class="active" onclick="switchTab('dashboard',this)">📊 Admin Dashboard</div>
+<div onclick="switchTab('photos',this)">🖼️ Photos</div>
+<div onclick="switchTab('urls',this)">🔗 Project URLs</div>
+<div onclick="switchTab('team',this)">👥 Team Members</div>
+<div onclick="switchTab('certs',this)">📜 Certificates</div>
+<div onclick="switchTab('projects',this)">🚀 Projects</div>
+<div onclick="window.open('https://geni-ai-command-centre.vercel.app/','_blank')">🌐 View Live Site ↗</div>
+</div>
+</div>
+
+<div class="main">
+<div class="top"><h1 id="title">Admin Dashboard</h1><span class="mono" style="font-size:11px;color:var(--muted)">Team Reborn Innovators · InduX5-26VU-353</span></div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+<div class="stats">
+<div class="stat"><h4>PROJECTS</h4><h2 id="c_proj">0</h2></div>
+<div class="stat"><h4>PHOTOS</h4><h2 id="c_photo">0</h2></div>
+<div class="stat"><h4>TEAM</h4><h2 id="c_team">0</h2></div>
+<div class="stat"><h4>CERTIFICATES</h4><h2 id="c_cert">0</h2></div>
+</div>
+<div class="panel"><h3>Quick Add Project Card</h3><p class="mono" style="font-size:11px;color:var(--muted);margin-top:6px">Use Projects tab for full form - Fields: Project name, https://project-site-url, Category, Filters, Description, Tech, Button text</p></div>
+</div>
+
+<!-- PROJECTS -->
+<div id="projects" class="hidden">
+<div class="panel">
+<h3>Add Project Card</h3>
+<label>Project name *</label><input id="p_name" placeholder="TRINETRA">
+<label>https://project-site-url *</label><input id="p_url" placeholder="https://nayantra-360.vercel.app/">
+<div class="grid2"><div><label>Category (e.g. Disaster Intelligence)</label><input id="p_cat" placeholder="Industrial Intelligence"></div><div><label>Filters, comma separated (e.g. AI, IoT)</label><input id="p_filters" placeholder="AI, Industrial Safety, Computer Vision, HealthTech, EdTech, MVA Robotics, IoT"></div></div>
+<label>Description</label><textarea id="p_desc" placeholder="Industrial Intelligence • AI, Industrial Safety, Computer Vision, HealthTech, EdTech, MVA Robotics, IoT"></textarea>
+<div class="grid2"><div><label>Tech (e.g. AI • IoT • Computer Vision)</label><input id="p_tech" placeholder="AI • IoT • Computer Vision"></div><div><label>Button text (e.g. Explore Project →)</label><input id="p_btn" value="Explore Project →"></div></div>
+<button class="btn" onclick="saveProject()">Add Project</button>
+<div id="plist"></div>
+</div>
+</div>
+
+<!-- OTHER TABS (simplified) -->
+<div id="photos" class="hidden"><div class="panel"><h3>Photos</h3><input type="file" id="photoIn"><button class="btn" onclick="addPhoto()">Upload (Local Save)</button><div id="photolist"></div></div></div>
+<div id="urls" class="hidden"><div class="panel"><h3>Project URLs</h3><div id="urllist"></div></div></div>
+<div id="team" class="hidden"><div class="panel"><h3>Team Members</h3><div class="grid2"><input id="t_name" placeholder="Name - Ashish Kumar"><input id="t_role" placeholder="Role - Team Leader"></div><button class="btn" onclick="addTeam()">Add Member</button><div id="teamlist"></div></div></div>
+<div id="certs" class="hidden"><div class="panel"><h3>Certificates</h3><input id="cert_name" placeholder="Certificate Name"><button class="btn" onclick="addCert()">Add Certificate</button><div id="certlist"></div></div></div>
+</div>
+
+<script>
+let projects=JSON.parse(localStorage.getItem('geni_projects')||'[]');
+if(projects.length==0){projects=[{name:"TRINETRA",url:"https://nayantra-360.vercel.app/",cat:"Industrial Intelligence",filters:"AI, Industrial Safety, Computer Vision, HealthTech, EdTech, MVA Robotics, IoT",desc:"Industrial Intelligence • AI, Industrial Safety, Computer Vision, HealthTech, EdTech, MVA Robotics, IoT",tech:"AI • IoT • Computer Vision",btn:"Explore Project →"}];save()}
+let photos=JSON.parse(localStorage.getItem('geni_photos')||'[]');
+let team=JSON.parse(localStorage.getItem('geni_team')||'[]');
+let certs=JSON.parse(localStorage.getItem('geni_certs')||'[]');
+let editIdx=-1;
+
+function switchTab(id,el){document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.nav div').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.getElementById('title').innerText=el?el.innerText:'Admin';if(id=='projects')renderProjects();if(id=='urls')renderUrls();if(id=='photos')renderPhotos();if(id=='team')renderTeam();if(id=='certs')renderCerts();updateCounts()}
+function save(){localStorage.setItem('geni_projects',JSON.stringify(projects));updateCounts()}
+function updateCounts(){document.getElementById('c_proj').innerText=projects.length;document.getElementById('c_photo').innerText=photos.length;document.getElementById('c_team').innerText=team.length;document.getElementById('c_cert').innerText=certs.length}
+
+function saveProject(){
+  const p={name:document.getElementById('p_name').value,url:document.getElementById('p_url').value,cat:document.getElementById('p_cat').value,filters:document.getElementById('p_filters').value,desc:document.getElementById('p_desc').value,tech:document.getElementById('p_tech').value,btn:document.getElementById('p_btn').value};
+  if(!p.name||!p.url){alert('Project name & URL required');return}
+  if(editIdx>=0){projects[editIdx]=p;editIdx=-1;document.querySelector('#projects .btn').innerText='Add Project'}else{projects.push(p)}
+  save();renderProjects();clearP();
+}
+function renderProjects(){
+  const el=document.getElementById('plist');el.innerHTML='';projects.forEach((p,i)=>{
+    el.innerHTML+=`<div class="project-card"><b>${p.name}</b> • ${p.cat}<br><a href="${p.url}" target="_blank">${p.url}</a><br><span class="mono" style="font-size:10px;color:var(--muted)">${p.filters}</span><p>${p.desc}</p><small>${p.tech} | ${p.btn}</small><div class="actions"><button class="edit" onclick="editP(${i})">Edit</button><button class="del" onclick="delP(${i})">Delete</button></div></div>`;
+  });
+}
+function editP(i){const p=projects[i];document.getElementById('p_name').value=p.name;document.getElementById('p_url').value=p.url;document.getElementById('p_cat').value=p.cat;document.getElementById('p_filters').value=p.filters;document.getElementById('p_desc').value=p.desc;document.getElementById('p_tech').value=p.tech;document.getElementById('p_btn').value=p.btn;editIdx=i;document.querySelector('#projects .btn').innerText='Update Project';switchTab('projects',document.querySelectorAll('.nav div')[5]);window.scrollTo(0,0)}
+function delP(i){if(confirm('Delete?')){projects.splice(i,1);save();renderProjects()}}
+function clearP(){['p_name','p_url','p_cat','p_filters','p_desc','p_tech'].forEach(id=>document.getElementById(id).value='');document.getElementById('p_btn').value='Explore Project →'}
+function renderUrls(){const el=document.getElementById('urllist');el.innerHTML=projects.map(p=>`<div class="project-card">${p.name} - <a href="${p.url}" target="_blank">${p.url}</a></div>`).join('')}
+function addPhoto(){const f=document.getElementById('photoIn').files[0];if(!f)return;photos.push(f.name);localStorage.setItem('geni_photos',JSON.stringify(photos));renderPhotos();updateCounts()}
+function renderPhotos(){document.getElementById('photolist').innerHTML=photos.map((n,i)=>`<div class="project-card">${n} <button class="del" onclick="photos.splice(${i},1);localStorage.setItem('geni_photos',JSON.stringify(photos));renderPhotos()">Delete</button></div>`).join('')}
+function addTeam(){const n=document.getElementById('t_name').value;const r=document.getElementById('t_role').value;if(!n)return;team.push({name:n,role:r});localStorage.setItem('geni_team',JSON.stringify(team));renderTeam();updateCounts()}
+function renderTeam(){document.getElementById('teamlist').innerHTML=team.map((t,i)=>`<div class="project-card">${t.name} - ${t.role} <button class="del" onclick="team.splice(${i},1);localStorage.setItem('geni_team',JSON.stringify(team));renderTeam()">Delete</button></div>`).join('')}
+function addCert(){const n=document.getElementById('cert_name').value;if(!n)return;certs.push(n);localStorage.setItem('geni_certs',JSON.stringify(certs));renderCerts();updateCounts()}
+function renderCerts(){document.getElementById('certlist').innerHTML=certs.map((c,i)=>`<div class="project-card">${c} <button class="del" onclick="certs.splice(${i},1);localStorage.setItem('geni_certs',JSON.stringify(certs));renderCerts()">Delete</button></div>`).join('')}
+updateCounts();renderProjects();
+</script>
+</body>
+</html>
