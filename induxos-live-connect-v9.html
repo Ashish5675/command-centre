@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>INDUX-OS Live Connect v9 | InduX5-26VU-353</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--green:#00ff88;--pink:#ff006a;--yellow:#ffaa00;--cyan:#00e5ff}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,sans-serif}
+body{background:var(--bg);color:#fff;min-height:100vh}
+[hidden]{display:none!important}
+.top{height:52px;background:#020617;border-bottom:2px solid var(--green);display:flex;justify-content:space-between;align-items:center;padding:0 12px;position:sticky;top:0;z-index:5;font-size:14px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#64748b;margin-right:6px}
+.dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+h3{font-size:14px;color:var(--green);margin-bottom:8px}
+.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:800;cursor:pointer;font-size:14px}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.g{background:var(--green);color:#000}.p{background:var(--pink);color:#fff}.y{background:var(--yellow);color:#000}.c{background:#0ea5e9;color:#fff}.s{background:#334155;color:#fff}.r{background:#ef4444;color:#fff}
+input,select{width:100%;background:#0f172a;border:1px solid var(--line);color:#fff;border-radius:10px;padding:11px;margin:5px 0;font-size:15px}
+/* lobby */
+#lobby{max-width:820px;margin:auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#lobby h2{font-size:20px;margin-bottom:4px}#lobby p{font-size:13px;color:#94a3b8;margin-bottom:8px}
+#codeIn{font-size:28px;font-weight:900;letter-spacing:.3em;text-align:center;text-transform:uppercase}
+.full{width:100%;margin-top:6px}
+/* code banner */
+#banner{background:linear-gradient(90deg,#052e1b,#0b3d2a);border-bottom:2px solid var(--green);padding:12px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center}
+.codeLabel{font-size:12px;color:#a7f3d0}
+#bigCode{font-size:clamp(34px,9vw,56px);font-weight:900;letter-spacing:.25em;color:var(--green);text-shadow:0 0 18px rgba(0,255,136,.6);background:#020617;border:2px solid var(--green);border-radius:14px;padding:4px 18px 4px 28px;cursor:pointer}
+#qr{background:#fff;padding:6px;border-radius:8px;line-height:0}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+/* room */
+.wrap{max-width:1280px;margin:auto;padding:12px;display:grid;grid-template-columns:1fr 340px;gap:12px}
+.videos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.tile{position:relative}.tile small{position:absolute;left:8px;top:6px;background:#000a;padding:2px 8px;border-radius:99px;font-size:11px}
+video{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;border:2px solid var(--line);object-fit:cover}
+.chat,.log{background:#0f172a;border-radius:10px;padding:8px;font-size:13px;height:180px;overflow:auto;word-break:break-word}
+#sopBox{font-size:13px;background:#0f172a;padding:8px;border-radius:10px;max-height:200px;overflow:auto}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#020617;border:1px solid var(--yellow);color:var(--yellow);padding:10px 16px;border-radius:12px;font-size:13px;z-index:9;max-width:90%}
+@media(max-width:900px){#lobby,.wrap{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:no-preference){#bigCode{transition:transform .15s}#bigCode:active{transform:scale(.96)}}
+</style></head><body>
+
+<div class="top"><div><b style="color:var(--green)">INDUX-OS</b> Live Connect v9</div><div><span class="dot" id="dot"></span><span id="callStatus">Not connected</span></div></div>
+
+<!-- LOBBY -->
+<section id="lobby">
+ <div class="card" style="grid-column:1/-1">
+  <h3>Your details</h3>
+  <div class="row"><input id="userName" placeholder="Your name" style="flex:1;min-width:150px"><select id="roleSel" style="flex:1;min-width:150px"><option value="Worker">👷 Worker</option><option value="Supervisor">👨‍💼 Supervisor</option><option value="Authority">👨‍🏫 Higher Authority</option></select></div>
+ </div>
+ <div class="card">
+  <h2>Start a room</h2><p>Get a joining code. Share it with the other person.</p>
+  <button class="btn g full" onclick="createRoom()">Create room &amp; get code</button>
+ </div>
+ <div class="card">
+  <h2>Join with a code</h2><p>Type the 6-character code shown on the other device.</p>
+  <input id="codeIn" maxlength="6" placeholder="••••••" autocomplete="off" inputmode="text" onkeydown="if(event.key==='Enter')joinRoom()">
+  <button class="btn c full" onclick="joinRoom()">Join now</button>
+ </div>
+</section>
+
+<!-- ROOM -->
+<section id="room" hidden>
+ <div id="banner">
+  <div style="text-align:center"><div class="codeLabel">JOINING CODE — tell or send this to the other person</div><div id="bigCode" title="Tap to copy" onclick="copyCode()">------</div></div>
+  <div class="row" style="flex-direction:column">
+   <button class="btn g" onclick="copyLink()">Copy join link</button>
+   <button class="btn c" onclick="shareCode()">Share (WhatsApp etc.)</button>
+  </div>
+  <div id="qr" title="Scan with phone camera"></div>
+ </div>
+ <div class="wrap">
+  <div class="card">
+   <h3>🎥 Live video</h3>
+   <div class="videos" id="videos"><div class="tile"><small>You</small><video id="localVideo" autoplay muted playsinline></video></div></div>
+   <div class="row" style="margin-top:10px">
+    <button class="btn g" onclick="startCam()">Camera</button>
+    <button class="btn s" onclick="toggleMute()">Mute</button>
+    <button class="btn s" onclick="flipCam()">Flip</button>
+    <button class="btn c" onclick="shareScreen()">Share screen</button>
+    <button class="btn r" onclick="endCall()">Leave</button>
+   </div>
+   <h3 style="margin-top:12px">💬 Chat + AI</h3>
+   <div class="chat" id="chatBox"></div>
+   <div class="row" style="margin-top:6px;flex-wrap:nowrap"><input id="chatInput" placeholder="Type SOP question… Hindi allowed" onkeydown="if(event.key==='Enter')sendChat()" style="margin:0"><button class="btn g" onclick="sendChat()">Send</button></div>
+   <div class="row" style="margin-top:6px"><button class="btn y" onclick="askAI('MVA X200 F-102 error kya hai?')">Ask AI: F-102?</button><button class="btn c" onclick="askAI('Helmet rule batao Hindi me')">Ask in Hindi</button></div>
+  </div>
+  <div style="display:grid;gap:12px;align-content:start">
+   <div class="card">
+    <h3>🧠 AI confidence</h3>
+    <div style="display:flex;justify-content:space-between;font-size:12px"><span>Confidence</span><span id="confText">92%</span></div>
+    <div style="height:10px;background:var(--line);border-radius:99px;margin-top:4px"><div id="confBar" style="height:10px;width:92%;background:var(--green);border-radius:99px"></div></div>
+    <div id="confMsg" style="font-size:12px;margin-top:6px;color:var(--green)">AI can answer from SOP</div>
+    <h3 style="margin-top:12px">🚨 Escalation</h3>
+    <div style="font-size:12px;border:2px dashed var(--yellow);background:#1a1500;border-radius:10px;padding:8px">AI under 60% → call the other person live → share SOP</div>
+    <div id="escTimer" style="font-size:24px;font-weight:900;color:var(--yellow);margin-top:6px">00:00</div><div id="escStatus" style="font-size:12px;color:var(--yellow)">Waiting…</div>
+    <div class="row" style="margin-top:6px"><button class="btn y" onclick="simulateAILow()">Simulate AI fail</button><button class="btn p" onclick="triggerSOS()">SOS</button></div>
+   </div>
+   <div class="card">
+    <h3>📚 SOP</h3>
+    <select id="sopSel" onchange="loadSOP()"><option>MVA X200 Manual 45p - Motor Bearing</option><option>SOP 102p - PPE &amp; Safety Rules</option><option>Rule Book 80p - Emergency Steps</option><option>Maintenance 60p - X200 Fault Codes</option><option>Training Video Transcript</option></select>
+    <div id="sopBox"></div>
+    <button class="btn c full" onclick="shareSOP()">Send SOP to other person</button>
+   </div>
+   <div class="card"><h3>📋 Log</h3><div class="log" id="logBox"></div><button class="btn g full" onclick="exportLog()">Export CSV</button></div>
+  </div>
+ </div>
+</section>
+<div id="toast" hidden></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let peer,localStream,hostConn,isHost=false,code='',me={name:'',role:''},conns={},calls={},escInt,escSec=0,facing='user';
+const PFX='indux-';
+const SOPS={"MVA X200 Manual 45p - Motor Bearing":"<b>MVA X200 F-102: Bearing Temp High</b><br>1. Stop machine, helmet + gloves<br>2. IR &gt;80°C inform supervisor<br>3. Page 42 cooling 15 min<br>4. If persists escalate","SOP 102p - PPE & Safety Rules":"<b>PPE Rules</b><br>Helmet, vest, gloves, shoes, goggles mandatory<br>Phone not allowed<br>Page 7","Rule Book 80p - Emergency Steps":"<b>Emergency</b><br>Fire → Alarm → Evacuate → 101<br>Medical → SOS → Video","Maintenance 60p - X200 Fault Codes":"<b>Faults</b><br>F-101 overload, F-102 bearing high temp, F-103 oil low","Training Video Transcript":"<b>Transcript</b><br>Check SOP before X200. Ask AI, if not solved ask Supervisor live."};
+
+function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,4000)}
+function sys(t){const c=$('chatBox');c.insertAdjacentHTML('beforeend',`<div style="color:#ffaa00">System: ${esc(t)}</div>`);c.scrollTop=c.scrollHeight;log(t)}
+function msg(w,t,col){const c=$('chatBox');c.insertAdjacentHTML('beforeend',`<div style="color:${col}"><b>${esc(w)}:</b> ${esc(t)}</div>`);c.scrollTop=c.scrollHeight}
+function log(t){const l=$('logBox');l.insertAdjacentHTML('beforeend',`<div>${new Date().toLocaleTimeString()} ${esc(t)}</div>`);l.scrollTop=l.scrollHeight}
+function status(t,on){$('callStatus').textContent=t;$('dot').classList.toggle('on',!!on)}
+function readMe(){me.name=$('userName').value.trim()||'Guest';me.role=$('roleSel').value}
+function genCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function link(){return location.origin+location.pathname+'?room='+code}
+
+async function startCam(){
+ try{localStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:true});$('localVideo').srcObject=localStream;return true}
+ catch(e){toast('Camera/mic blocked. Allow access, and open the page over https. ('+e.name+')');return false}
+}
+
+/* ---------- create / join ---------- */
+async function createRoom(){
+ readMe();isHost=true;await startCam();
+ const tryHost=()=>{
+  code=genCode();peer=new Peer(PFX+code);
+  peer.on('open',()=>{enterRoom();status('Waiting for the other person…',false);sys('Room '+code+' ready. Share the code.')});
+  peer.on('error',e=>{if(e.type==='unavailable-id'){peer.destroy();tryHost()}else toast('Connection error: '+e.type)});
+  hostEvents();
+ };tryHost();
+}
+function hostEvents(){
+ peer.on('connection',c=>{conns[c.peer]=c;wire(c);c.on('open',()=>c.send({type:'hello',name:me.name,role:me.role}))});
+ peer.on('call',call=>{call.answer(localStream||undefined);handleCall(call)});
+}
+async function joinRoom(){
+ readMe();code=$('codeIn').value.trim().toUpperCase();
+ if(code.length<6){toast('Enter the 6-character code');return}
+ isHost=false;await startCam();status('Connecting…',false);
+ peer=new Peer();
+ peer.on('open',()=>{
+  hostConn=peer.connect(PFX+code,{reliable:true});
+  const t=setTimeout(()=>{toast('Could not reach room '+code+'. Check the code.');status('Not connected',false)},12000);
+  hostConn.on('open',()=>{clearTimeout(t);enterRoom();wire(hostConn);hostConn.send({type:'hello',name:me.name,role:me.role});handleCall(peer.call(PFX+code,localStream||new MediaStream()))});
+ });
+ peer.on('error',e=>{toast(e.type==='peer-unavailable'?'Room '+code+' not found. Check the code.':'Connection error: '+e.type);status('Not connected',false)});
+}
+function enterRoom(){
+ $('lobby').hidden=true;$('room').hidden=false;$('bigCode').textContent=code;
+ $('qr').innerHTML='';try{new QRCode($('qr'),{text:link(),width:96,height:96})}catch{$('qr').hidden=true}
+ if(!isHost){$('banner').querySelector('.codeLabel').textContent='ROOM CODE — you joined this room'}
+ loadSOP();sys('You are '+me.name+' ('+me.role+')');
+}
+
+/* ---------- data ---------- */
+function wire(c){
+ c.on('data',d=>onData(d,c));
+ c.on('close',()=>{delete conns[c.peer];sys('Other person left');status(isHost?'Waiting for the other person…':'Disconnected',false);removeTile(c.peer)});
+}
+function send(o,except){const t=isHost?Object.values(conns):(hostConn?[hostConn]:[]);t.forEach(c=>{if(c!==except&&c.open)try{c.send(o)}catch{}})}
+function onData(d,c){
+ if(d.type==='hello'){c.meta=d;sys(d.name+' ('+d.role+') joined')}
+ if(d.type==='chat'){msg(d.name+' ('+d.role+')',d.text,'#ff6ba3')}
+ if(d.type==='sop'){$('sopBox').innerHTML=d.text;sys('SOP received from '+(d.name||'other'))}
+ if(d.type==='escalate'){triggerEscalation(true)}
+ if(isHost&&d.type!=='hello')send(d,c); // relay to others
+}
+function sendChat(){
+ const t=$('chatInput').value.trim();if(!t)return;
+ msg('You',t,'#00ff88');send({type:'chat',text:t,name:me.name,role:me.role});$('chatInput').value='';
+ if(/f-102|bearing/i.test(t))setTimeout(()=>askAI(t),500);
+}
+
+/* ---------- video ---------- */
+function handleCall(call){
+ calls[call.peer]=call;
+ call.on('stream',rs=>{
+  let v=$('v-'+call.peer);
+  if(!v){const d=document.createElement('div');d.className='tile';d.id='t-'+call.peer;d.innerHTML='<small>Remote</small><video id="v-'+call.peer+'" autoplay playsinline></video>';$('videos').appendChild(d);v=d.querySelector('video')}
+  v.srcObject=rs;status('Live face-to-face',true);sys('Video connected');
+ });
+ call.on('close',()=>{removeTile(call.peer);delete calls[call.peer]});
+}
+function removeTile(id){const t=$('t-'+id);if(t)t.remove()}
+function replaceVideo(track){Object.values(calls).forEach(c=>c.peerConnection&&c.peerConnection.getSenders().forEach(s=>{if(s.track&&s.track.kind==='video')s.replaceTrack(track)}))}
+async function shareScreen(){
+ try{const s=await navigator.mediaDevices.getDisplayMedia({video:true});const tr=s.getVideoTracks()[0];$('localVideo').srcObject=s;replaceVideo(tr);sys('Screen sharing');
+  tr.onended=()=>{const cam=localStream&&localStream.getVideoTracks()[0];if(cam){replaceVideo(cam);$('localVideo').srcObject=localStream}sys('Screen sharing stopped')}}
+ catch(e){toast('Screen sharing is not available on this device')}
+}
+async function flipCam(){
+ facing=facing==='user'?'environment':'user';
+ try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});const tr=s.getVideoTracks()[0];
+  if(localStream){localStream.getVideoTracks().forEach(t=>{t.stop();localStream.removeTrack(t)});localStream.addTrack(tr)}
+  $('localVideo').srcObject=localStream;replaceVideo(tr)}catch{toast('Could not switch camera')}
+}
+function toggleMute(){if(!localStream)return;localStream.getAudioTracks().forEach(t=>t.enabled=!t.enabled);sys('Mute toggled')}
+function endCall(){Object.values(calls).forEach(c=>c.close());if(peer)peer.destroy();if(localStream)localStream.getTracks().forEach(t=>t.stop());location.href=location.pathname}
+
+/* ---------- share code ---------- */
+function copyCode(){navigator.clipboard.writeText(code).then(()=>toast('Code '+code+' copied'),()=>toast('Code: '+code))}
+function copyLink(){navigator.clipboard.writeText(link()).then(()=>toast('Join link copied'),()=>toast(link()))}
+function shareCode(){
+ const text='Join my INDUX-OS live call. Code: '+code+'\n'+link();
+ if(navigator.share)navigator.share({title:'INDUX-OS Live Connect',text}).catch(()=>{});
+ else window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+/* ---------- AI + escalation + SOP ---------- */
+function setConf(c){$('confText').textContent=c+'%';$('confBar').style.width=c+'%';$('confBar').style.background=c<60?'#ff006a':'#00ff88';$('confMsg').textContent=c<60?'LOW - escalating to human expert':'AI can answer from SOP';$('confMsg').style.color=c<60?'#ff006a':'#00ff88'}
+function askAI(q){
+ const conf=Math.random()<0.4?45:92;setConf(conf);
+ if(conf<60){msg('INDUX-AI','Confidence '+conf+'% - beyond my reach. Connecting you to a human expert.','#00e5ff');triggerEscalation(false)}
+ else msg('INDUX-AI','Answer for "'+q+'": As per MVA X200 Manual p42, bearing temp high F-102: stop machine, cool 15 min, check IR, wear PPE. Rule p18: inform supervisor. ('+conf+'%)','#00e5ff');
+}
+function triggerEscalation(remote){
+ escSec=0;clearInterval(escInt);
+ escInt=setInterval(()=>{escSec++;$('escTimer').textContent=String(Math.floor(escSec/60)).padStart(2,'0')+':'+String(escSec%60).padStart(2,'0')},1000);
+ $('escStatus').textContent=remote?'Escalation received from other person':'Escalated - the other person is alerted';
+ try{const x=new (window.AudioContext||window.webkitAudioContext)(),o=x.createOscillator();o.frequency.value=880;o.connect(x.destination);o.start();setTimeout(()=>o.stop(),700)}catch{}
+ sys(remote?'ESCALATION received':'ESCALATION sent');
+ if(!remote)send({type:'escalate'});
+}
+function simulateAILow(){setConf(45);msg('INDUX-AI','Simulated: SOP knowledge not enough. Escalating.','#00e5ff');triggerEscalation(false)}
+function triggerSOS(){simulateAILow();msg('System','SOS PRESSED - critical incident','orange')}
+function loadSOP(){$('sopBox').innerHTML=SOPS[$('sopSel').value]||'SOP'}
+function shareSOP(){send({type:'sop',text:$('sopBox').innerHTML,name:me.name});sys('SOP sent')}
+function exportLog(){const b=new Blob([$('logBox').innerText],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='INDUX-Live-Connect-Log.csv';a.click()}
+
+/* ---------- ?room=CODE auto-fill ---------- */
+const q=new URLSearchParams(location.search).get('room');
+if(q){$('codeIn').value=q.toUpperCase().slice(0,6);$('userName').focus()}
+</script></body></html>
